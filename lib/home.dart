@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:tflite/tflite.dart';
 
 class Home extends StatefulWidget {
   const Home({Key? key}) : super(key: key);
@@ -19,13 +20,31 @@ class _HomeState extends State<Home> {
   @override
   void initState() {
     super.initState();
+    loadModel().then((value) {
+      setState(() {});
+    });
   }
 
   dectectImage(File image) async {
-    setState(() {});
+    var output = await Tflite.runModelOnImage(
+        path: image.path,
+        numResults: 2,
+        threshold: 0.6,
+        imageMean: 127.5,
+        imageStd: 127.5);
+    setState(() {
+      _output = output!;
+      _loading = false;
+    });
   }
 
-  loadModel() async {}
+  loadModel() async {
+    await Tflite.loadModel(
+        model: 'assets/model_unquant.tflite',
+        labels: 'assets/labels.txt',
+        useGpuDelegate: false,
+        numThreads: 1);
+  }
 
   @override
   void dispose() {
